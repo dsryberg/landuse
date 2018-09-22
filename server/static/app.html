@@ -1,0 +1,54 @@
+<!doctype html>
+
+<header>
+    <title>Hello from Flask</title>
+    <!-- <script src="/static/js/d3.min.js" ></script> -->
+    <script src="/static/js/d3.v4.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>   -->
+    <style>
+        body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+        svg { width:100%; height: 100% }
+    </style>
+</header>
+<body>
+  <div class="app"></div>
+  <script type="text/javascript">
+      var width = 600;
+      var height = 600;
+      
+      var svg = d3.select(".app")
+                  .append("svg")
+                  .attr("width", width)
+                  .attr("height", height);
+      
+      var projection = d3.geoMercator()
+        .scale(width / 2 / Math.PI)
+        //.scale(100)
+        .translate([width / 2, height / 2])
+
+      var path = d3.geoPath()
+        .projection(projection);
+      
+      var url = "/getgeo";
+      // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
+
+      d3.json(url, function(err, geojson) {
+        // console.log(geojson)
+
+        bounds = d3.geoBounds(geojson);
+        center = [ (bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
+        console.log(bounds);
+        span = bounds[1][1]-bounds[0][1]; //Math.max(bounds[1][0]-bounds[0][0], bounds[1][1]-bounds[0][1]);
+        var scale  = 100 * 180/span;
+        var offset = [width/2, height/2];
+        var projection = d3.geoMercator().scale(scale).center(center).translate(offset);
+
+        var path = d3.geoPath()
+        .projection(projection);
+
+        svg.append("path")
+          .attr("d", path(geojson))
+      })
+
+  </script>
+</body>
