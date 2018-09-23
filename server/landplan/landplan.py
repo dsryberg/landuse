@@ -3,8 +3,10 @@ import topojson
 from io import BytesIO, TextIOWrapper
 import geokit as gk
 
-def vectorFrameToTopoJson(vec):
-    
+def vectorFrameToTopoJson(file):
+    vec = gk.vector.extractFeatures(file)
+    vec.geom = [g.SimplifyPreserveTopology(0.001) for g in vec.geom]
+
     # Create geoJson
     o = BytesIO()
     # o='deleteme.json'

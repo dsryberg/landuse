@@ -11,14 +11,24 @@
     
     <style>
         body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
-        svg { width:100%; height: 100% }
+        /*svg { width:100%; height: 100% }*/
+
+        path {
+            fill: #d3d3d3;
+            stroke: black;
+            stroke-width: "2%";
+        }
+
     </style>
 </header>
 <body>
-  <div class="app"></div>
+  <h1>MAP!</h1>
+  <div class="app" width='600px' height='400px'></div>
+
   <script type="text/javascript">
-      var width = 600;
-      var height = 600;
+      var width = 600,
+          height = 600;
+
       // var url = "/topoaachen";
       // var url = "/topodeu";
       var url = "/static/deu.topojson";
@@ -29,8 +39,7 @@
 
         // topo = topojson.topology(geojson.features);
         var tj = topojson.presimplify(tj);
-        tjj = tj;
-        geojson = topojson.feature( tj, tj.objects.primary );
+        var geojson = topojson.feature( tj, tj.objects.primary );
 
         var svg = d3.select(".app")
                     .append("svg")
@@ -41,19 +50,34 @@
             g = svg.append("g")
 
         // Determine a good projection to match the data
-        
         var mapprojection = d3.geoMercator()
-            .fitExtent( [[0,0],[width,height]], geojson)
-            .clipExtent([[0, 0], [width, height]])
+                              .fitExtent( [[0,0],[width,height]], geojson);
+        
         var minZOriginal = 1/mapprojection.scale(), minZ = minZOriginal;
+        
+        tmp = mapprojection.invert([0,0])
+        var top =tmp[1]
+        var left=tmp[0]
+        
+        tmp = mapprojection.invert([width,height])
+        var bot  =tmp[1]
+        var right=tmp[0]
 
-        // var clipWindow = d3.geoIdentity().clipExtent([[0, 0], [width, height]])
-        var simplification = d3.geoTransform({point: function(x, y, z) { if (z>=minZ) return this.stream.point(x, y); }});
+        var clipAndSimp = d3.geoTransform({point: function(x,y,z){ 
+            if (y>top | y<bot | x<left |x>right){
+                if (z>=1000*minZOriginal){
+                    return this.stream.point(x,y);
+                }
+            } else {
+                if (z>=minZ){
+                    return this.stream.point(x,y);
+                }
+            }
+        }});
         
         var projection = {
               stream: function(s) {
-                return simplification.stream(mapprojection.stream(s)); // WOOOOOW, javascript sucks...order is reversed
-                // return mapprojection.stream(s);
+                return clipAndSimp.stream(mapprojection.stream(s)); // WOOOOOW, javascript sucks...order is 
               }
             };
 
@@ -68,23 +92,46 @@
         var zoom = d3.zoom()
                      .on("zoom", zoomed);
 
+
+        var lastZoom = 1;
+        var lastXO = 0;
+        var lastYO = 0;
+
+        var pad = 50
+        function recalculatePoints(t) {
+            if ((Math.abs(1-t.k/lastZoom) > 0.1)  | 
+                ( Math.abs(t.x/t.k - lastXO) > pad) | 
+                ( Math.abs(t.y/t.k - lastYO) > pad)) {
+
+                k = Math.max(1, Math.min(10, t.k));
+                lastZoom=t.k;
+                lastXO = t.x/t.k;
+                lastYO = t.y/t.k;
+
+                tmp = mapprojection.invert([-pad-(t.x/t.k), -pad-(t.y/t.k),])
+                top =tmp[1]
+                left=tmp[0]
+
+                tmp = mapprojection.invert([width+pad-(t.x/t.k), height+pad-(t.y/t.k),])
+                right=tmp[0]
+                bot  =tmp[1]
+
+                minZ = minZOriginal / k;
+
+                g.selectAll("path").style("stroke-width", 1/k).attr("d", path( geojson ));
+            }
+        }
         function zoomed(d) {
           var t = d3.event.transform;
-          minZ = Math.min(minZOriginal, minZOriginal / (t.k * t.k));
+          
           g.attr("transform", d3.event.transform);
-          g.selectAll("path").attr("d", path( geojson ));
-          // transform.translate([t.x, t.y]).scale(t.k);
-          // context.clearRect(0, 0, width, height);
-          // context.beginPath();
-          // path(land);
-          // context.fill();
-          // context.beginPath();
-          // path(borders);
-          // context.stroke();
+          recalculatePoints(t);
         }
 
+
+
         svg.call(zoom);
-       
+
       })
 
       // If the drag behavior prevents the default click,

@@ -31,8 +31,7 @@ def getDEU():
 def getTopoDEU():
     FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
     # FILE=gk._test_data_["aachenShapefile.shp"]
-    vec = gk.vector.extractFeatures(FILE)
-    topo = vectorFrameToTopoJson(vec)
+    topo = vectorFrameToTopoJson(FILE)
 
     return topo
 
@@ -41,8 +40,7 @@ def getTopoDEU():
 def getTopoAachen():
     # FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
     FILE=gk._test_data_["aachenShapefile.shp"]
-    vec = gk.vector.extractFeatures(FILE)
-    topo = vectorFrameToTopoJson(vec)
+    topo = vectorFrameToTopoJson(FILE)
 
     return topo
 
