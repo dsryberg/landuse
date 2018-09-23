@@ -10,7 +10,7 @@
     <script src="https://bost.ocks.org/mike/simplify/simplify.js"></script>
     
     <style>
-        body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+        body { margin:0;position:fixed;top:0;right:0;bot:0;left:0; }
         /*svg { width:100%; height: 100% }*/
 
         path {
@@ -31,7 +31,7 @@
 
       // var url = "/topoaachen";
       // var url = "/topodeu";
-      var url = "/static/deu.topojson";
+      var url = "/static/deu_complex.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
       d3.json(url, function(err, tj) {
@@ -53,7 +53,7 @@
         var mapprojection = d3.geoMercator()
                               .fitExtent( [[0,0],[width,height]], geojson);
         
-        var minZOriginal = 1/mapprojection.scale(), minZ = minZOriginal;
+        var minZOriginal = 2/mapprojection.scale(), minZ = minZOriginal;
         
         tmp = mapprojection.invert([0,0])
         var top =tmp[1]
@@ -65,7 +65,7 @@
 
         var clipAndSimp = d3.geoTransform({point: function(x,y,z){ 
             if (y>top | y<bot | x<left |x>right){
-                if (z>=1000*minZOriginal){
+                if (z>=100*minZOriginal){
                     return this.stream.point(x,y);
                 }
             } else {
@@ -97,28 +97,29 @@
         var lastXO = 0;
         var lastYO = 0;
 
-        var pad = 50
+        var pad = 100
         function recalculatePoints(t) {
-            if ((Math.abs(1-t.k/lastZoom) > 0.1)  | 
+            if ((Math.abs(1-t.k/lastZoom) > -0.01)  | 
                 ( Math.abs(t.x/t.k - lastXO) > pad) | 
                 ( Math.abs(t.y/t.k - lastYO) > pad)) {
 
-                k = Math.max(1, Math.min(10, t.k));
+                k = Math.max(1, Math.min(50, t.k));
+                // console.log(t.k, k);
                 lastZoom=t.k;
                 lastXO = t.x/t.k;
                 lastYO = t.y/t.k;
 
-                tmp = mapprojection.invert([-pad-(t.x/t.k), -pad-(t.y/t.k),])
-                top =tmp[1]
+                var tmp = mapprojection.invert([(-pad-t.x)/t.k, (-pad-t.y)/t.k,])
                 left=tmp[0]
+                top =tmp[1]
 
-                tmp = mapprojection.invert([width+pad-(t.x/t.k), height+pad-(t.y/t.k),])
+                var tmp = mapprojection.invert([(pad+width-t.x)/t.k, (pad+height-t.y)/t.k,])
                 right=tmp[0]
                 bot  =tmp[1]
 
                 minZ = minZOriginal / k;
 
-                g.selectAll("path").style("stroke-width", 1/k).attr("d", path( geojson ));
+                 g.selectAll("path").style("stroke-width", 1/k).attr("d", path( geojson ));
             }
         }
         function zoomed(d) {
