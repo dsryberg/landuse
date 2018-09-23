@@ -3,9 +3,12 @@
 <header>
     <meta charset="utf-8">
     <title>Hello from Flask</title>
-    <!-- <script src="/static/js/d3.min.js" ></script> -->
     <script src="/static/js/d3.v4.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>   -->
+    <!-- <script src="/static/js/simplify.js"></script> -->
+    <script src="https://unpkg.com/geojson-vt@3.2.0/geojson-vt.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+    <script src="https://bost.ocks.org/mike/simplify/simplify.js"></script>
+    
     <style>
         body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
         svg { width:100%; height: 100% }
@@ -16,10 +19,18 @@
   <script type="text/javascript">
       var width = 600;
       var height = 600;
-      var url = "/aachen";
+      // var url = "/topoaachen";
+      // var url = "/topodeu";
+      var url = "/static/deu.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
-      d3.json(url, function(err, geojson) {
+      d3.json(url, function(err, tj) {
+        if (err) throw err;
+
+        // topo = topojson.topology(geojson.features);
+        var tj = topojson.presimplify(tj);
+        tjj = tj;
+        geojson = topojson.feature( tj, tj.objects.primary );
 
         var svg = d3.select(".app")
                     .append("svg")
@@ -30,26 +41,47 @@
             g = svg.append("g")
 
         // Determine a good projection to match the data
-        bounds = d3.geoBounds(geojson);
-        center = [ (bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
-        span = bounds[1][1]-bounds[0][1]; //Math.max(bounds[1][0]-bounds[0][0], bounds[1][1]-bounds[0][1]);
-        var scale  = 100 * 180/span;
-        var offset = [width/2, height/2];
-        var projection = d3.geoMercator().scale(scale).center(center).translate(offset);
+        
+        var mapprojection = d3.geoMercator()
+            .fitExtent( [[0,0],[width,height]], geojson)
+            .clipExtent([[0, 0], [width, height]])
+        var minZOriginal = 1/mapprojection.scale(), minZ = minZOriginal;
+
+        // var clipWindow = d3.geoIdentity().clipExtent([[0, 0], [width, height]])
+        var simplification = d3.geoTransform({point: function(x, y, z) { if (z>=minZ) return this.stream.point(x, y); }});
+        
+        var projection = {
+              stream: function(s) {
+                return simplification.stream(mapprojection.stream(s)); // WOOOOOW, javascript sucks...order is reversed
+                // return mapprojection.stream(s);
+              }
+            };
 
         // Make path mapper and create region instance
-        var path = d3.geoPath().projection(projection)
+        path = d3.geoPath().projection(projection);
 
-        region = g.selectAll("path")
-                  .data(geojson.features).enter().append("path")
-                  .attr("d", path(geojson));
+        var region = g.selectAll("path")
+                      .data(geojson.features).enter().append("path")
+                      .attr("d", path( geojson ));
 
         // Add zooming and dragging
         var zoom = d3.zoom()
-                     .on("zoom", function() {
-                          //g.style("stroke-width", 1.5 / d3.event.transform.k + "px");
-                          g.attr("transform", d3.event.transform); // updated for d3 v4
-                        })
+                     .on("zoom", zoomed);
+
+        function zoomed(d) {
+          var t = d3.event.transform;
+          minZ = Math.min(minZOriginal, minZOriginal / (t.k * t.k));
+          g.attr("transform", d3.event.transform);
+          g.selectAll("path").attr("d", path( geojson ));
+          // transform.translate([t.x, t.y]).scale(t.k);
+          // context.clearRect(0, 0, width, height);
+          // context.beginPath();
+          // path(land);
+          // context.fill();
+          // context.beginPath();
+          // path(borders);
+          // context.stroke();
+        }
 
         svg.call(zoom);
        
