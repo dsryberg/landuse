@@ -23,6 +23,7 @@ def getAachen():
 def getDEU():
     FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
     vec = gk.vector.extractFeatures(FILE)
+    vec.geom = [g.SimplifyPreserveTopology(0.01) for g in vec.geom]
     json = gk.vector.createGeoJson(vec)
 
     return json
