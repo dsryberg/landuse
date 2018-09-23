@@ -1,6 +1,7 @@
 <!doctype html>
 
 <header>
+    <meta charset="utf-8">
     <title>Hello from Flask</title>
     <!-- <script src="/static/js/d3.min.js" ></script> -->
     <script src="/static/js/d3.v4.min.js"></script>
@@ -15,40 +16,51 @@
   <script type="text/javascript">
       var width = 600;
       var height = 600;
-      
-      var svg = d3.select(".app")
-                  .append("svg")
-                  .attr("width", width)
-                  .attr("height", height);
-      
-      var projection = d3.geoMercator()
-        .scale(width / 2 / Math.PI)
-        //.scale(100)
-        .translate([width / 2, height / 2])
-
-      var path = d3.geoPath()
-        .projection(projection);
-      
-      var url = "/getgeo";
+      var url = "/aachen";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
       d3.json(url, function(err, geojson) {
-        // console.log(geojson)
 
+        var svg = d3.select(".app")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .on("click", stopped, true);
+
+            g = svg.append("g")
+
+        // Determine a good projection to match the data
         bounds = d3.geoBounds(geojson);
         center = [ (bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
-        console.log(bounds);
         span = bounds[1][1]-bounds[0][1]; //Math.max(bounds[1][0]-bounds[0][0], bounds[1][1]-bounds[0][1]);
         var scale  = 100 * 180/span;
         var offset = [width/2, height/2];
         var projection = d3.geoMercator().scale(scale).center(center).translate(offset);
 
-        var path = d3.geoPath()
-        .projection(projection);
+        // Make path mapper and create region instance
+        var path = d3.geoPath().projection(projection)
 
-        svg.append("path")
-          .attr("d", path(geojson))
+        region = g.selectAll("path")
+                  .data(geojson.features).enter().append("path")
+                  .attr("d", path(geojson));
+
+        // Add zooming and dragging
+        var zoom = d3.zoom()
+                     .on("zoom", function() {
+                          //g.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+                          g.attr("transform", d3.event.transform); // updated for d3 v4
+                        })
+
+        svg.call(zoom);
+       
       })
+
+      // If the drag behavior prevents the default click,
+      // also stop propagation so we don’t click-to-zoom.
+      function stopped() {
+        if (d3.event.defaultPrevented) d3.event.stopPropagation();
+      }
+
 
   </script>
 </body>
