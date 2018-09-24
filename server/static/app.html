@@ -50,7 +50,7 @@
             tj = topojson.presimplify(input);
             geojson = topojson.feature( tj, tj.objects.primary );
         }
-
+        VAR=geojson;
         var svg = d3.select(".app")
                     .append("svg")
                     .attr("width", width)
@@ -96,27 +96,29 @@
             };
 
 
-        // Fill function
-        var color = d3.scaleSequential(d3.interpolateRdBu)
-                      .domain([1, 16]); // domain comes from the max CCA_1 value
-        
-        function fillFunction(d){
-            value = Number(d.properties.CCA_1);
-            return color( value );
-        }
-
         // Make path mapper and create region instance
         path = d3.geoPath().projection(projection);
 
         region = g.selectAll("path")
                   .data(geojson.features).enter()
                   .append("path")
-                  .attr('id', function(d) {return "_index_"+d.properties._index})
+                  .attr('id', d => "_index_"+d.properties._index)
                   .on("mouseover", mouseover)
                   .on("mouseout", mouseout)
                   .on("click", dance)
-                  .attr('fill', fillFunction)
                   .attr("d", path);
+        
+        // Fill function
+        function colorby(input) {
+          var vals = geojson.features.map( d => +d.properties[input])
+          console.log([Math.min(...vals), Math.max(...vals)]);
+          var color = d3.scaleSequential(d3.interpolateRdBu)
+                        .domain([Math.min(...vals), Math.max(...vals)]); 
+
+          g.selectAll("path")
+           .attr('fill', d => color(d.properties[input]));
+        }
+        colorby("CCA_1");
 
         // Add zooming and dragging
         var zoom = d3.zoom().on("zoom", zoomed);
@@ -170,11 +172,19 @@
           info.text("");
           for (var p in d.properties){
             if (d.properties.hasOwnProperty(p)){
-              var s = p + ": " + d.properties[p] +"\n";
+              var s = p + ": " + d.properties[p];
               info.append("tspan")
                   .attr("x",0)
                   .attr("dy","1.2em")
-                  .text(s)
+                  .text(p+":")
+                  .on("click", function() {
+                    colorby(d3.select(this).text().slice(0,-1))
+                  });
+              
+              info.append("tspan")
+                  .attr("x", 0)
+                  .attr("dx", "6.5em")
+                  .text(d.properties[p]);
             }
           }
 
