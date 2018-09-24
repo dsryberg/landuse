@@ -7,11 +7,17 @@
     <script src="/static/js/d3.v4.min.js"></script>
     <script src="/static/js/d3-scale-chromatic.v1.js"></script>
     <script src="/static/js/topojson.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="static/css/sevsmapapp.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/sevsmapapp.css">
 </header>
 <body>
     <div class="app"></div>
 
-    <script>var url="/static/topo/{{ topo }}.topojson" </script>
+    <!-- <script>var url="/static/topofiles/{{ topo }}.topojson" </script> -->
     <script src="/static/js/sevsmapapp.js"></script>
+
+    {% if data %}
+        <script> draw("/static/topofiles/{{ topo }}.topojson", "/read/{{ data }}");</script>
+    {% else %}
+        <script> draw("/static/topofiles/{{ topo }}.topojson"); </script>
+    {% endif %}
 </body>

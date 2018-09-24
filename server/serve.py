@@ -1,61 +1,47 @@
 # SERVER LOGIC GOES HERE
 import geokit as gk
+from os.path import dirname, splitext, join, basename, isfile
+import pandas as pd
+from datetime import datetime as dt
 
-from flask import Flask, render_template, redirect, request
+DATADIR = join(dirname(__file__), "static", "datafiles")
+TOPODIR = join(dirname(__file__), "static", "topofiles")
+
+from flask import Flask, render_template, redirect, request, abort
 app = Flask(__name__)
 from landplan.landplan import vectorFrameToTopoJson
+
 
 @app.route('/')
 def index():
     mapName = request.args.get("topo", "deu_adm2")
-    print(list(request.args.keys()), mapName)
 
     # return redirect("/static/app.html")
-    return render_template('base.html', name="Land Plan", topo=mapName)
+    return render_template('base.html', topo=mapName)
 
-@app.route('/aachen')
-def getAachen():
-    # FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
-    FILE=gk._test_data_["aachenShapefile.shp"]
-    # FILE=gk._test_data_["aachen_buildings.shp"]
-    vec = gk.vector.extractFeatures(FILE)
-    json = gk.vector.createGeoJson(vec)
+@app.route("/read/<path:subpath>")
+def readdata(subpath): 
 
-    return json
+    fullPath = join(DATADIR, subpath)
+    try:
+        ext = splitext(fullPath)[1]
+        if ext==".csv": data = pd.read_csv(fullPath)
+        elif ext==".xls" or ext==".xlsx": data = pd.read_excel(fullPath)
+        else: return render_template('404.html'), 404
 
-@app.route('/deu')
-def getDEU():
-    FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
-    vec = gk.vector.extractFeatures(FILE)
-    vec.geom = [g.SimplifyPreserveTopology(0.01) for g in vec.geom]
-    json = gk.vector.createGeoJson(vec)
+        json = data.fillna('').T.to_json()
 
-    return json
+        return json
+    except Exception as e:
+        print(dt.now(), ": Error with input '%s'"%subpath)
+        print(e)
+        return render_template('404.html'), 404
 
-@app.route('/topodeu')
-def getTopoDEU():
-    FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm1.shp"
-    # FILE=gk._test_data_["aachenShapefile.shp"]
-    # topo = vectorFrameToTopoJson(FILE)
-    vec = gk.vector.extractFeatures(FILE)
-    vec.geom = [g.SimplifyPreserveTopology(0.001) for g in vec.geom]
-    return gk.vector.createGeoJson(vec, topo=True)
+@app.route("/map/<toponame>/")
+@app.route("/map/<toponame>/<path:datapath>")
+def makemap(toponame, datapath=False):
+    return render_template('base.html', topo=toponame, data=datapath)     
 
-@app.route('/topodeu2')
-def getTopoDEU2():
-    FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm2.shp"
-    # FILE=gk._test_data_["aachenShapefile.shp"]
-    # topo = vectorFrameToTopoJson(FILE)
-    vec = gk.vector.extractFeatures(FILE)
-    # vec.geom = [g.SimplifyPreserveTopology(0.001) for g in vec.geom]
-    return gk.vector.createGeoJson(vec, topo=True)
-
-@app.route('/topoaachen')
-def getTopoAachen():
-    FILE=gk._test_data_["aachenShapefile.shp"]
-
-    vec = gk.vector.extractFeatures(FILE)
-    return gk.vector.createGeoJson(vec, topo=True)
 
 if __name__ == "__main__":
     app.run(port=3035, host="0.0.0.0")
