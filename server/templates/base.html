@@ -1,12 +1,17 @@
 <!doctype html>
 
 <header>
-  <title>Hello from Flask</title>
+    <meta charset="utf-8">
+    <title>Sev made a map!</title>
+
+    <script src="/static/js/d3.v4.min.js"></script>
+    <script src="/static/js/d3-scale-chromatic.v1.js"></script>
+    <script src="/static/js/topojson.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/sevsmapapp.css">
 </header>
 <body>
-  {% if name %}
-    <h1>Hello {{ name }}!</h1>
-  {% else %}
-    <h1>Hello, World!</h1>
-  {% endif %}
+    <div class="app"></div>
+
+    <script>var url="/static/topo/{{ topo }}.topojson" </script>
+    <script src="/static/js/sevsmapapp.js"></script>
 </body>

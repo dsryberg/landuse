@@ -1,14 +1,17 @@
 # SERVER LOGIC GOES HERE
 import geokit as gk
 
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 app = Flask(__name__)
 from landplan.landplan import vectorFrameToTopoJson
 
 @app.route('/')
 def index():
-    return redirect("/static/app.html")
-    # return render_template('base.html', name="Land Plan")
+    mapName = request.args.get("topo", "deu_adm2")
+    print(list(request.args.keys()), mapName)
+
+    # return redirect("/static/app.html")
+    return render_template('base.html', name="Land Plan", topo=mapName)
 
 @app.route('/aachen')
 def getAachen():
