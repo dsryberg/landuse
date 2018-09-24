@@ -37,6 +37,14 @@ def getTopoDEU():
     vec.geom = [g.SimplifyPreserveTopology(0.001) for g in vec.geom]
     return gk.vector.createGeoJson(vec, topo=True)
 
+@app.route('/topodeu2')
+def getTopoDEU2():
+    FILE="/home/sev/fzj-repos/data/region/gadm/DEU_adm2.shp"
+    # FILE=gk._test_data_["aachenShapefile.shp"]
+    # topo = vectorFrameToTopoJson(FILE)
+    vec = gk.vector.extractFeatures(FILE)
+    # vec.geom = [g.SimplifyPreserveTopology(0.001) for g in vec.geom]
+    return gk.vector.createGeoJson(vec, topo=True)
 
 @app.route('/topoaachen')
 def getTopoAachen():

@@ -22,7 +22,7 @@
 </header>
 <body>
   <h1>MAP!</h1>
-  <div class="app" width='600px' height='400px'></div>
+  <div class="app"></div>
 
   <script type="text/javascript">
       var width = 900,
@@ -32,7 +32,8 @@
       // var url = "/topodeu";
       // var url = "/deu";
       // var url = "/aachen";
-      var url = "/static/deu_complex.topojson";
+      // var url = "/static/deu_complex.topojson";
+      var url = "/static/deu2_complex.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
       d3.json(url, function(err, input) {
