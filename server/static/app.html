@@ -29,17 +29,27 @@
           height = 600;
 
       // var url = "/topoaachen";
-      // var url = "/topodeu";
+      var url = "/topodeu";
       // var url = "/deu";
-      var url = "/static/deu_complex.topojson";
+      // var url = "/aachen";
+      // var url = "/static/deu_complex.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
-      d3.json(url, function(err, tj) {
+      d3.json(url, function(err, input) {
         if (err) throw err;
 
-        // tj = topojson.topology(tj.features);
-        tj = topojson.presimplify(tj);
-        geojson = topojson.feature( tj, tj.objects.primary );
+        var tj, geojson;
+        if ('features' in input) {
+            tj = topojson.topology(input.features);
+            tj = topojson.presimplify(tj);
+            geojson = topojson.feature( tj, tj.objects[0] ); // THIS WILL ONLY GET THE FIRST ITEM!!!!
+                                                             // ....It also doesn't create a FeatureCOllection
+                                                             //     object and will therefoe fail :(
+        }
+        else {
+            tj = topojson.presimplify(input);
+            geojson = topojson.feature( tj, tj.objects.primary );
+        }
 
         var svg = d3.select(".app")
                     .append("svg")
