@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <title>Sev made a map!</title>
     <script src="/static/js/d3.v4.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+    <script src="/static/js/d3-scale-chromatic.v1.js"></script>
+    <script src="/static/js/topojson.min.js"></script>
     <!-- <script src='http://d3js.org/colorbrewer.v1.js'></script> -->
 
     <style>
@@ -25,14 +25,14 @@
   <div class="app" width='600px' height='400px'></div>
 
   <script type="text/javascript">
-      var width = 600,
-          height = 600;
+      var width = 900,
+          height = 550;
 
       // var url = "/topoaachen";
-      var url = "/topodeu";
+      // var url = "/topodeu";
       // var url = "/deu";
       // var url = "/aachen";
-      // var url = "/static/deu_complex.topojson";
+      var url = "/static/deu_complex.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
       d3.json(url, function(err, input) {
@@ -58,6 +58,10 @@
                     .on("click", stopped, true);
 
             g = svg.append("g")
+            info = svg.append("text")
+                      .attr("x", 10)
+                      .attr("y", 25)
+                      .text("-")
 
         // Determine a good projection to match the data
         var mapprojection = d3.geoMercator()
@@ -104,19 +108,18 @@
         // Make path mapper and create region instance
         path = d3.geoPath().projection(projection);
 
-        var region = g.selectAll("path")
-                      .data(geojson.features).enter()
-                      .append("path")
-                      .on("mouseover", mouseover)
-                      .on("mouseout", mouseout)
-                      .attr('fill', fillFunction)
-                      .attr("d", path);
-
+        region = g.selectAll("path")
+                  .data(geojson.features).enter()
+                  .append("path")
+                  .attr('id', function(d) {return "_index_"+d.properties._index})
+                  .on("mouseover", mouseover)
+                  .on("mouseout", mouseout)
+                  .on("click", dance)
+                  .attr('fill', fillFunction)
+                  .attr("d", path);
 
         // Add zooming and dragging
-        var zoom = d3.zoom()
-                     .on("zoom", zoomed);
-
+        var zoom = d3.zoom().on("zoom", zoomed);
 
         var lastZoom = 1;
         var lastXO = 0;
@@ -164,21 +167,37 @@
             };
 
         function mouseover(d){
-            d3.select(this)
+          info.text("");
+          for (var p in d.properties){
+            if (d.properties.hasOwnProperty(p)){
+              var s = p + ": " + d.properties[p] +"\n";
+              info.append("tspan")
+                  .attr("x",0)
+                  .attr("dy","1.2em")
+                  .text(s)
+            }
+          }
+
+          d3.select(this)
             .moveToFront()
-            .transition()        
+            .transition("selecting")        
             .duration(200)      
             .style("stroke", '#DDa0a0')
             .style("stroke-width", 3/lastZoom);
         }
         function mouseout(d){
             d3.select(this)
-            .transition()        
+            .transition("deselecting")        
             .duration(1500)      
             .style("stroke", "black")
             .style("stroke-width", 1/lastZoom);
         }
-
+        function dance(d){
+            d3.select(this)
+              .transition("dancing").duration(100).attr("transform", "translate(5,0)")
+              .transition().duration(200).attr("transform", "translate(-5,0)")
+              .transition().duration(100).attr("transform", "translate(0,0)")
+        }
       })
 
       // If the drag behavior prevents the default click,
