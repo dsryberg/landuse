@@ -16,8 +16,8 @@
     <script src="/static/js/sevsmapapp.js"></script>
 
     {% if data %}
-        <script> draw("/static/topofiles/{{ topo }}.topojson", "/read/{{ data }}");</script>
+        <script> draw("/static/topofiles/{{ topo }}.topojson", "{{ colorby }}", "/read/{{ data }}");</script>
     {% else %}
-        <script> draw("/static/topofiles/{{ topo }}.topojson"); </script>
+        <script> draw("/static/topofiles/{{ topo }}.topojson", "{{ colorby }}"); </script>
     {% endif %}
 </body>

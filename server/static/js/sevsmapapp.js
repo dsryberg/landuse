@@ -1,4 +1,4 @@
-function draw(mapurl, updateurl){
+function draw(mapurl, initialColorBy, updateurl){
 
   var width = window.innerWidth,
       height = window.innerHeight;
@@ -189,9 +189,12 @@ function draw(mapurl, updateurl){
             }
           });
         });
+
+        // Recolor after update?
+        if (initialColorBy!="_index") colorby(initialColorBy);
+
       });
     }
-    
   })
 }
 

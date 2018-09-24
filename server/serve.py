@@ -17,7 +17,7 @@ def index():
     mapName = request.args.get("topo", "deu_adm2")
 
     # return redirect("/static/app.html")
-    return render_template('base.html', topo=mapName)
+    return render_template('base.html', topo=mapName, colorby="_index")
 
 @app.route("/read/<path:subpath>")
 def readdata(subpath): 
@@ -40,8 +40,8 @@ def readdata(subpath):
 @app.route("/map/<toponame>/")
 @app.route("/map/<toponame>/<path:datapath>")
 def makemap(toponame, datapath=False):
-    return render_template('base.html', topo=toponame, data=datapath)     
-
+    colorby = request.args.get("colorby", "_index")
+    return render_template('base.html', topo=toponame, colorby=colorby, data=datapath)     
 
 if __name__ == "__main__":
     app.run(port=3035, host="0.0.0.0")
