@@ -21,19 +21,18 @@
     </style>
 </header>
 <body>
-  <h1>MAP!</h1>
   <div class="app"></div>
 
   <script type="text/javascript">
-      var width = 900,
-          height = 550;
+      var width = window.innerWidth,
+          height = window.innerHeight;
 
       // var url = "/topoaachen";
       // var url = "/topodeu";
       // var url = "/deu";
       // var url = "/aachen";
       // var url = "/static/deu_complex.topojson";
-      var url = "/static/deu2_complex.topojson";
+      var url = "/static/deu2.topojson";
       // var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
 
       d3.json(url, function(err, input) {
@@ -119,7 +118,7 @@
           g.selectAll("path")
            .attr('fill', d => color(d.properties[input]));
         }
-        colorby("CCA_1");
+        colorby("_index");
 
         // Add zooming and dragging
         var zoom = d3.zoom().on("zoom", zoomed);

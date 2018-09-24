@@ -1,13 +1,14 @@
 # SERVER LOGIC GOES HERE
 import geokit as gk
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 app = Flask(__name__)
 from landplan.landplan import vectorFrameToTopoJson
 
 @app.route('/')
 def index():
-    return render_template('base.html', name="Land Plan")
+    return redirect("/static/app.html")
+    # return render_template('base.html', name="Land Plan")
 
 @app.route('/aachen')
 def getAachen():
@@ -54,4 +55,4 @@ def getTopoAachen():
     return gk.vector.createGeoJson(vec, topo=True)
 
 if __name__ == "__main__":
-    app.run(port=3035)
+    app.run(port=3035, host="0.0.0.0")
